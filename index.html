@@ -1,140 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Spades Score Tracker – Individual Players</title>
+  <meta charset="UTF-8" />
+  <title>Spades Score Tracker</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    input[type="number"] { width: 50px; }
-    input[type="checkbox"] { transform: scale(1.2); }
-    .totals { font-weight: bold; margin-top: 10px; }
-    button { margin-top: 10px; padding: 8px 12px; }
+    table {
+      border-collapse: collapse;
+      margin: 10px;
+    }
+    td {
+      border: 1px solid #aaa;
+      padding: 1px;
+      text-align: center;
+      cursor: pointer;
+      width: 45px;
+	  height: 18px;
+    }
+
+	table tr td:nth-child(3){
+		border-width: 1px 3px 1px 1px;
+		zborder-color: #aaa green #aaa #aaa;
+	}
+    
+	thead {
+      border: 1px solid #aaa;
+      padding: 2px;
+      text-align: center;
+      cursor: pointer;
+      background-color: #f0f0f0;
+    }
+
+    /* Common popup styling */
+    .popup {
+      display: none;
+      position: absolute;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      border-radius: 6px;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Dropdown popup */
+    #popup {
+      width: 160px;
+    }
+    .dropdown-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    select, input[type="text"] {
+      font-size: 16px;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      width: 70px;
+    }
+
+    /* Text input popup */
+    #textPopup {
+      width: 24em;
+    }
+    .text-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+	.text-grid input {
+		width: 10em;
+	}
+
+    button {
+      margin-top: 10px;
+      padding: 7px 14px;
+      font-size: 16px;
+      border: none;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
   </style>
 </head>
 <body>
 
-  <h2>Spades Score Tracker (Individual Players)</h2>
+  <h3>Spades Score Tracker</h3>
 
-  <table id="scoreTable">
+  <!-- Combined Table -->
+  <table id="mainTable">
     <thead>
       <tr>
-        <th rowspan="2">Round</th>
-        <th colspan="3">Team A - Player A1</th>
-        <th colspan="3">Team A - Player A2</th>
-        <th colspan="3">Team B - Player B1</th>
-        <th colspan="3">Team B - Player B2</th>
-        <th>Team A Points</th>
-        <th>Team B Points</th>
+        <th colspan="3" data-header="1">Team 1</th>
+        <th colspan="3" data-header="2">Team 2</th>
       </tr>
-      <tr>
-        <th>Bid</th><th>Nil?</th><th>Tricks</th>
-        <th>Bid</th><th>Nil?</th><th>Tricks</th>
-        <th>Bid</th><th>Nil?</th><th>Tricks</th>
-        <th>Bid</th><th>Nil?</th><th>Tricks</th>
-        <th></th><th></th>
+  	  <tr>
+			<td>Bid</td><td>Points</td><td>Total</td>
+			<td>Bid</td><td>Points</td><td>Total</td>
       </tr>
     </thead>
-    <tbody id="scoreBody">
-    </tbody>
+    <tbody></tbody>
   </table>
 
-  <div class="totals">
-    Team A Total: <span id="teamATotal">0</span> |
-    Team B Total: <span id="teamBTotal">0</span>
+  <!-- Dropdown Popup -->
+  <div id="popup" class="popup">
+    <div class="dropdown-grid">
+      <select id="dropdown1"></select>
+      <select id="dropdown2"></select>
+      <select id="dropdown3"></select>
+      <select id="dropdown4"></select>
+    </div>
+    <button id="closePopup">Close</button>
   </div>
 
-  <button onclick="addRound()">Add Round</button>
+  <!-- Text Entry Popup -->
+  <div id="textPopup" class="popup">
+    <div class="text-grid">
+      <input type="text" id="Player11" placeholder="Team 1 - Player 1" />
+      <input type="text" id="Player21" placeholder="Team 2 - Player 1" />
+      <input type="text" id="Player22" placeholder="Team 2 - Player 2" />
+      <input type="text" id="Player12" placeholder="Team 1 - Player 2" />
+    </div>
+    <button id="closeTextPopup">Close</button>
+  </div>
 
   <script>
-    let roundCount = 0;
-    let teamATotal = 0, teamBTotal = 0;
-
-    function createPlayerInputs(prefix) {
-      return `
-        <td><input type="number" class="bid${prefix}" min="0" value="0" onchange="updateScores()"></td>
-        <td><input type="checkbox" class="nil${prefix}" onchange="updateScores()"></td>
-        <td><input type="number" class="tricks${prefix}" min="0" value="0" onchange="updateScores()"></td>
-      `;
-    }
-
-    function addRound() {
-      roundCount++;
-      const tbody = document.getElementById("scoreBody");
-      const row = document.createElement("tr");
-
-      row.innerHTML = `
-        <td>${roundCount}</td>
-        ${createPlayerInputs('A1')}
-        ${createPlayerInputs('A2')}
-        ${createPlayerInputs('B1')}
-        ${createPlayerInputs('B2')}
-        <td class="teamAPoints">0</td>
-        <td class="teamBPoints">0</td>
-      `;
-
-      tbody.appendChild(row);
-    }
-
-    function updateScores() {
-      const rows = document.querySelectorAll("#scoreBody tr");
-      teamATotal = 0;
-      teamBTotal = 0;
-
-      rows.forEach(row => {
-        let teamAPoints = 0;
-        let teamBPoints = 0;
-
-        const players = ['A1', 'A2', 'B1', 'B2'];
-        let teamABid = 0, teamATricks = 0;
-        let teamBBid = 0, teamBTricks = 0;
-
-        players.forEach(p => {
-          const bid = parseInt(row.querySelector(`.bid${p}`).value) || 0;
-          const tricks = parseInt(row.querySelector(`.tricks${p}`).value) || 0;
-          const nil = row.querySelector(`.nil${p}`).checked;
-
-          if (p.startsWith('A')) {
-            teamATricks += tricks;
-            if (nil) {
-              teamAPoints += (tricks === 0 ? 100 : -100);
-            } else {
-              teamABid += bid;
-            }
-          } else {
-            teamBTricks += tricks;
-            if (nil) {
-              teamBPoints += (tricks === 0 ? 100 : -100);
-            } else {
-              teamBBid += bid;
-            }
-          }
-        });
-
-        if (teamATricks >= teamABid) {
-          teamAPoints += teamABid * 10 + (teamATricks - teamABid); // bags
+    $(document).ready(function () {
+      // Populate dropdowns with numbers 0-10
+      for (let i = 1; i <= 4; i++) {
+        for (let num = 0; num <= 10; num++) {
+          $(`#dropdown${i}`).append(`<option value="${num}">${num}</option>`);
         }
+      }
 
-        if (teamBTricks >= teamBBid) {
-          teamBPoints += teamBBid * 10 + (teamBTricks - teamBBid);
+      // Create 4 rows × 6 columns
+      for (let r = 1; r <= 4; r++) {
+        const tr = $('<tr></tr>');
+        for (let c = 1; c <= 6; c++) {
+          tr.append(`<td data-row="${r}" data-col="${c}" tabindex="0"></td>`);
         }
+        $('#mainTable tbody').append(tr);
+      }
 
-        row.querySelector(".teamAPoints").textContent = teamAPoints;
-        row.querySelector(".teamBPoints").textContent = teamBPoints;
+      let $selectedCell = null;
 
-        teamATotal += teamAPoints;
-        teamBTotal += teamBPoints;
+      // Show dropdown popup
+      $('#mainTable').on('click', 'td', function () {
+        const row = $(this).data('row');
+        const col = $(this).data('col');
+
+        if ((row === 1 || row === 3) && (col === 1 || col === 4)) {
+          $selectedCell = $(this);
+          const offset = $selectedCell.offset();
+          $('#popup').css({ visibility: 'hidden', display: 'block' });
+          const w = $('#popup').outerWidth(), h = $('#popup').outerHeight();
+
+          $('#popup').css({
+            top: offset.top + ($selectedCell.outerHeight() / 2) - (h / 2),
+            left: offset.left + ($selectedCell.outerWidth() / 2) - (w / 2),
+            display: 'block',
+            visibility: 'visible'
+          });
+
+          for (let i = 1; i <= 4; i++) $(`#dropdown${i}`).val('0');
+        }
       });
 
-      document.getElementById("teamATotal").textContent = teamATotal;
-      document.getElementById("teamBTotal").textContent = teamBTotal;
-    }
+      $('#closePopup').on('click', function () {
+		  if ($selectedCell) {
+			const row = $selectedCell.data('row');
+			const val1 = $('#dropdown1').val();
+			const val2 = $('#dropdown2').val();
+			const val3 = $('#dropdown3').val();
+			const val4 = $('#dropdown4').val();
+
+			if (row === 1) {
+			  // Special behavior for row 1
+			  $(`#mainTable td[data-row="1"][data-col="1"]`).text(`${val1} / ${val4}`);
+			  $(`#mainTable td[data-row="1"][data-col="2"]`).text(`${val2} / ${val3}`);
+			} else {
+			  // Existing behavior for other rows
+			  $(`#mainTable td[data-row="${row}"][data-col="1"]`).text(`${val1} / ${val4}`);
+			  $(`#mainTable td[data-row="${row}"][data-col="4"]`).text(`${val2} / ${val3}`);
+			}
+		  }
+		  $('#popup').hide();
+		  $selectedCell = null;
+		});
+
+      // Show text popup on header cell click
+      $('#mainTable th').on('click', function () {
+        const offset = $(this).offset();
+        $('#textPopup').css({ visibility: 'hidden', display: 'block' });
+        const w = $('#textPopup').outerWidth(), h = $('#textPopup').outerHeight();
+
+        $('#textPopup').css({
+          top: offset.top + ($(this).outerHeight() / 2) - (h / 2),
+          left: offset.left + ($(this).outerWidth() / 2) - (w / 2),
+          display: 'block',
+          visibility: 'visible'
+        });
+
+        $('#text1, #text2, #text3, #text4').val('');
+      });
+
+      $('#closeTextPopup').on('click', function () {
+        $('#textPopup').hide();
+      });
+
+      // Click outside to close any popup
+      $(document).on('mousedown', function (e) {
+        if (!$(e.target).closest('.popup, td, th').length) {
+          $('#popup, #textPopup').hide();
+          $selectedCell = null;
+        }
+      });
+    });
   </script>
-
-</body>
-</html>
-
 
 </body>
 </html>
