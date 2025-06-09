@@ -5,9 +5,12 @@
   <title>Spades Score Tracker</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
+
     table {
       border-collapse: collapse;
       margin: 10px;
+	  font-family: Arial, sans-serif;
+	  font-size: 16px;
     }
     td {
       border: 1px solid #aaa;
@@ -41,7 +44,8 @@
       z-index: 1000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       border-radius: 6px;
-      font-family: Arial, sans-serif;
+	  font-family: Arial, sans-serif;
+	  font-size: 16px;
     }
 
     /* Dropdown popup */
@@ -55,7 +59,7 @@
       margin-bottom: 10px;
     }
     select, input[type="text"] {
-      font-size: 16px;
+      zfont-size: 16px;
       padding: 5px;
       border-radius: 4px;
       border: 1px solid #ccc;
@@ -64,7 +68,7 @@
 
     /* Text input popup */
     #textPopup {
-      width: 24em;
+      width: 16em;
     }
     .text-grid {
       display: grid;
@@ -72,13 +76,13 @@
       gap: 10px;
     }
 	.text-grid input {
-		width: 10em;
+		width: 8em;
 	}
 
     button {
       margin-top: 10px;
       padding: 7px 14px;
-      font-size: 16px;
+      zfont-size: 16px;
       border: none;
       background-color: #007BFF;
       color: white;
@@ -142,8 +146,8 @@
         }
       }
 
-      // Create 4 rows × 6 columns
-      for (let r = 1; r <= 4; r++) {
+      // Create 10 rows × 6 columns
+      for (let r = 1; r <= 10; r++) {
         const tr = $('<tr></tr>');
         for (let c = 1; c <= 6; c++) {
           tr.append(`<td data-row="${r}" data-col="${c}" tabindex="0"></td>`);
@@ -158,15 +162,17 @@
         const row = $(this).data('row');
         const col = $(this).data('col');
 
-        if ((row === 1 || row === 3) && (col === 1 || col === 4)) {
+        if ((col === 1 || col === 4)) {
           $selectedCell = $(this);
           const offset = $selectedCell.offset();
           $('#popup').css({ visibility: 'hidden', display: 'block' });
           const w = $('#popup').outerWidth(), h = $('#popup').outerHeight();
 
           $('#popup').css({
-            top: offset.top + ($selectedCell.outerHeight() / 2) - (h / 2),
-            left: offset.left + ($selectedCell.outerWidth() / 2) - (w / 2),
+            ztop: offset.top + ($selectedCell.outerHeight() / 2) - (h / 2),
+            zleft: offset.left + ($selectedCell.outerWidth() / 2) - (w / 2),
+			top: offset.top + ($selectedCell.outerHeight()),
+			left: 75,
             display: 'block',
             visibility: 'visible'
           });
