@@ -13,15 +13,15 @@
       border-collapse: collapse;
       margin: 10px;
 	  font-family: Arial, sans-serif;
-	  font-size: 40px;
+	  font-size: 60px;
     }
     td {
       border: 1px solid #aaa;
       padding: 1px;
       text-align: center;
       cursor: pointer;
-      width: 50px;
-	  height: 18px;
+      width: 120px;
+	  height: 60px;
     }
 
 	table tr td:nth-child(3){
@@ -55,7 +55,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       border-radius: 6px;
 	  font-family: Arial, sans-serif;
-	  font-size: 40px;
+	  font-size: 60px;
     }
 
     /* Dropdown popup */
