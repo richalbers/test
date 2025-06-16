@@ -10,10 +10,10 @@
 
 <body>
 
-  <h3>New Trusty</h3>
+  <h1>Spades Scoresheet</h1>
 
   <!-- Combined Table -->
-  <table id="mainTable">
+  <table id="scoreSheet">
     <thead>
       <tr>
         <th colspan="3" data-header="1" id="team1">Team 1</th>
@@ -28,40 +28,40 @@
   </table>
 
   <!-- Bid / Trick Popup -->
-  <div id="bidsPopup" class="popup">
+  <div id="bidsTricksPopup" class="popup">
   	<!-- <h3>Title</h3> -->
-    <div class="dropdown-grid">
+    <div class="btGrid">
 	  <div>
-		<span id="ddText0"></span><br>
-		<select id="dropdownBT0"></select>
+		<span id="btText0"></span><br>
+		<select id="btDropDown0"></select>
 	  </div>
 	  <div>
-		<span id="ddText1"></span><br>
-		<select id="dropdownBT1"></select>
+		<span id="btText1"></span><br>
+		<select id="btDropDown1"></select>
 	  </div>
 	  <div>
-		<span id="ddText2"></span><br>
-		<select id="dropdownBT2"></select>
+		<span id="btText2"></span><br>
+		<select id="btDropDown2"></select>
 	  </div>
 	  <div>
-		<span id="ddText3"></span><br>
-		<select id="dropdownBT3"></select>
+		<span id="btText3"></span><br>
+		<select id="btDropDown3"></select>
 	  </div>
     </div>
-	<div id="BTmsg"></div>
-    <button id="closeBTPopup">Save</button>
-    <button id="cancelBTPopup">Cancel</button>
+	<div id="btMsg"></div>
+    <button id="btSaveBtn">Save</button>
+    <button id="btCancelBtn">Cancel</button>
   </div>
 
   <!-- Player Name Entry Popup -->
   <div id="namesPopup" class="popup">
-    <div class="text-grid">
-      <input type="text" id="name0" placeholder="Team 1 - Player 1" />
-      <input type="text" id="name1" placeholder="Team 2 - Player 1" />
-      <input type="text" id="name2" placeholder="Team 2 - Player 2" />
-      <input type="text" id="name3" placeholder="Team 1 - Player 2" />
+    <div class="namesGrid">
+      <input type="text" id="nameTxtbox0" placeholder="Team 1 - Player 1" />
+      <input type="text" id="nameTxtbox1" placeholder="Team 2 - Player 1" />
+      <input type="text" id="nameTxtbox2" placeholder="Team 2 - Player 2" />
+      <input type="text" id="nameTxtbox3" placeholder="Team 1 - Player 2" />
     </div>
-    <button id="closeNamesPopup">Save</button>
+    <button id="namesSaveBtn">Save</button>
   </div>
  
 </body>
