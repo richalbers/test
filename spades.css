@@ -1,4 +1,9 @@
 
+	h1 {
+		text-align: center;
+		font-family: Arial, sans-serif;
+	}
+	
 	h3 {
 		margin: 0px 0px 10px 0px;
 		padding: 0px;
@@ -57,7 +62,7 @@
     #popup {
       width: 160px;
     }
-    .dropdown-grid {
+    .btGrid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
@@ -72,15 +77,15 @@
     }
 
     /* Text input popup */
-    #textPopup {
+    #namesPopup {
       width: 16em;
     }
-    .text-grid {
+    .namesGrid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
-	.text-grid input {
+	.namesGrid input {
 		width: 8em;
 	}
 
@@ -96,6 +101,10 @@
       transition: background-color 0.2s ease;
       width: 100%;
     }
+    button:hover {
+      background-color: #0056b3;
+    }
+ 
     button:hover {
       background-color: #0056b3;
     }
