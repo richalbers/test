@@ -1,4 +1,5 @@
 
+
 $(document).ready(function () {
 	const BLIND_NILL='😎';
 	const LAB_NILL='🤪';
@@ -12,16 +13,16 @@ $(document).ready(function () {
 	}
 	*/
 	
-	let names=["player 1","player 2","player 3","player 4"];	
+	let names=["","","",""];	
 	let scoreData=new SpadesData();
 	
 	const PROCESS_BIDS=0;
 	const PROCESS_TRICKS=1;
 	let action="";
 
-    // Create 10 rows × 6 columns
+    // Create scoresheet
 	let cellType=["bidCell","trickCell","totalCell","bidCell","trickCell","totalCell"];
-    for (let r = 0; r <= 20; r++) {
+    for (let r = 0; r < 20; r++) {
         const tr = $('<tr></tr>');
         for (let c = 0; c < 6; c++) {
 			tr.append(`<td class="${cellType[c]} row${r}" data-row="${r}" data-col="${c}" tabindex="0"></td>`);
@@ -32,7 +33,7 @@ $(document).ready(function () {
     let $selectedCell = null;
 
 	//-------------------------------------------------------------------
-    // Show names popup 
+    // show names popup 
     $('#scoreSheet th').on('click', function () {
 		for(let x=0; x<4;x++)	
 			$(`#nameTxtbox${x}`).val(names[x]);
@@ -47,6 +48,7 @@ $(document).ready(function () {
         });
     });
 
+	// process/close names popup
     $('#namesSaveBtn').on('click', function () {
 		names[0]=$('#nameTxtbox0').val();
 		names[1]=$('#nameTxtbox1').val();
@@ -66,7 +68,7 @@ $(document).ready(function () {
     //$('#scoreSheet).on('click', 'td', function () {
 	$('.bidCell, .trickCell').on('click', function () {
         const row = $(this).data('row');
-        const col = $(this).data('col');
+        //const col = $(this).data('col');
 		
 		let cellType="bidCell";
 		if ($(this).attr("class").indexOf('trickCell')>=0)
@@ -98,7 +100,7 @@ $(document).ready(function () {
 			}
 			
 		}
-		//tricks box clicked on	
+		//points box clicked on	
 		else { 
 			// only last row with data is allowed to have tricks entered.
 			if (row!=scoreData.lastRowWithData())
@@ -114,7 +116,7 @@ $(document).ready(function () {
 			for(let x=0; x<4; x++) {
 				let ndx=bidAmts.indexOf(bids[x]);
 				let bidDisp=bidDisplays[ndx];
-				$(`#btText${x}`).html(`bid: ${bidDisp}`);  
+				$(`#btText${x}`).html(`${names[x]} (${bidDisp})`);  
 				$(`#btDropDown${x}`).empty();
 				for (let num = 0; num <= 9; num++) 
 					$(`#btDropDown${x}`).append(`<option value="${num}">${num}</option>`);
@@ -149,21 +151,18 @@ $(document).ready(function () {
 			for(let x=0;x<4;x++)
 				bids[x] = parseInt($(`#btDropDown${x}`).val());
 			if (!bids[0] && !bids[1] && !bids[2] && !bids[3]) {
-				$('#btMsg').html("All 4 can't be 0");
+				$('#btMsg').html("Not all 4 can be nil!");
 				return;
 			}
 			scoreData.saveBids(bids,row);
 			
-			//show the player and team bids in the score sheet
+			//show the team bids in the score sheet
+			//if someone went nill, show both playwers bids, otherwise show team bid total
 			//0-9 bids map to 0-9, but -1 and -2 map to icons for blind and lab nill.
-			let bidDisp=["","","",""];
-			for (x=0;x<4;x++) { 
-				let ndx=bidAmts.indexOf(bids[x]);
-				bidDisp[x]=bidDisplays[ndx];
-			}
-			let teamBids=scoreData.getTeamBids(row);
-            $(`#scoreSheet td[data-row="${row}"][data-col="0"]`).html(`${bidDisp[0]} / ${bidDisp[3]}<br>${teamBids[0]}`);
-            $(`#scoreSheet td[data-row="${row}"][data-col="3"]`).html(`${bidDisp[1]} / ${bidDisp[2]}<br>${teamBids[1]}`);
+			teamBidDisp=formatTeamBidDisplays(row);
+
+            $(`#scoreSheet td[data-row="${row}"][data-col="0"]`).html(`${teamBidDisp[0]}`);
+            $(`#scoreSheet td[data-row="${row}"][data-col="3"]`).html(`${teamBidDisp[1]}`);
 		} 
 		else if (action==PROCESS_TRICKS) {
             const row = $selectedCell.data('row');
@@ -176,21 +175,23 @@ $(document).ready(function () {
 				return;
 			}
 			
-			//save and display tricks and scores and grand totals
 			scoreData.saveTricks(tricks,row);
-			let teamTricks=scoreData.getTeamTricks(row)
-			$(`#scoreSheet td[data-row="${row}"][data-col="1"]`).html(`${tricks[0]} / ${tricks[3]}<br>${teamTricks[0]}`);
-            $(`#scoreSheet td[data-row="${row}"][data-col="4"]`).html(`${tricks[1]} / ${tricks[2]}<br>${teamTricks[1]}`);
-			
+
+			//display round scores and totals to date
 			let scores=scoreData.getScores(row);
-			$(`#scoreSheet td[data-row="${row}"][data-col="2"]`).text(`${scores[0]}`);
-			$(`#scoreSheet td[data-row="${row}"][data-col="5"]`).text(`${scores[1]}`);
+			let html0=""+scores[0];
+			let html1=""+scores[1];
+			if (scoreData.bagAdjustment(row,0) >0)
+				html0=html0+"<br>-100";
+			if (scoreData.bagAdjustment(row,1) >0)
+				html1=html1+"<br>-100";
 			
-			let totals=scoreData.getTotals();
-			$(`#scoreSheet td[data-row="${row+1}"][data-col="2"]`).text(""); //erase old total display
-			$(`#scoreSheet td[data-row="${row+1}"][data-col="5"]`).text("");
-			$(`#scoreSheet td[data-row="${row+2}"][data-col="2"]`).text(`${totals[0]}`); //show new totals
-			$(`#scoreSheet td[data-row="${row+2}"][data-col="5"]`).text(`${totals[1]}`);
+			$(`#scoreSheet td[data-row="${row}"][data-col="1"]`).html(html0);
+			$(`#scoreSheet td[data-row="${row}"][data-col="4"]`).html(html1);
+			
+			let totals=scoreData.getTotals(row);
+			$(`#scoreSheet td[data-row="${row}"][data-col="2"]`).html(`${totals[0]}`); //show new totals
+			$(`#scoreSheet td[data-row="${row}"][data-col="5"]`).html(`${totals[1]}`);
 		}
 		
 		//close the popup
@@ -207,6 +208,33 @@ $(document).ready(function () {
 		$(".selected").removeClass("selected");
     });
 	
+	//==================================================================================
+	//format the team bids for the score sheet
+	//if someone went nill, show both playwers bids, otherwise show team bid total
+	//0-9 bids map to 0-9, but -1 and -2 map to icons for blind and lab nill.
+	//returns an array of two strings (one for each team)
+	function formatTeamBidDisplays(row) {
+		let bids=scoreData.getBids(row);
+		let teamBids=scoreData.getTeamBids(row);
+		
+		let bidDisp=["","","",""];
+		for (x=0;x<4;x++) { 
+			let ndx=bidAmts.indexOf(bids[x]);
+			bidDisp[x]=bidDisplays[ndx];
+		}
+		
+		teamBidDisp=["",""];
+		if (bids[0]<=0 || bids[3]<=0)
+			teamBidDisp[0]=`${bidDisp[0]} / ${bidDisp[3]}`;
+		else
+			teamBidDisp[0]=`${teamBids[0]}`;
+		if (bids[1]<=0 || bids[2]<=0)
+			teamBidDisp[1]=`${bidDisp[1]} / ${bidDisp[2]}`;
+		else
+			teamBidDisp[1]=`${teamBids[1]}`;
+		
+		return teamBidDisp;	//two element string array [team1Bid, team2bid]
+	}
 
     // Click outside to close any popup
 	/*
@@ -221,32 +249,34 @@ $(document).ready(function () {
 
 //===============================================================================
 class SpadesData {
-	static ROWS=20;
+	static ROWS=30;
 	
 	#bids;		//ROWSx4	[row][player]  Players 0&3 are team1, 1&2 are team2
 	#tricks;	//ROWSx4	[row][player]
 	
 	#scores;	//ROWSx2	[row][team]	
 	#bags;		//ROWSx2	[row][team]
-
+	#totalsToDate; //ROWSx2 [row][team]
 	
 	constructor() {
-		this.#bids=[];
-		this.#tricks=[];
-		this.#scores=[];
-		this.#bags=[];
+		this.#bids=[];			//player bids for each round
+		this.#tricks=[];		//player tricks taken for each round
+		this.#scores=[];		//team scores for each round
+		this.#bags=[];			//team bags for each round
+		this.#totalsToDate=[];	//team totals-to-date at the end of each round
 		for(let x=0;x<SpadesData.ROWS;x++) {
 			this.#bids.push([0,0,0,0])
 			this.#tricks.push([0,0,0,0])
 			this.#scores.push([0,0]);
-			this.#bags.push([0,0]);			
+			this.#bags.push([0,0]);	
+			this.#totalsToDate.push([0,0]);
 		}
 	}
 	
 	firstEmptyRow() {
 		let x=0;
 		let bids=this.#bids;
-		while (x<bids.length && bids[x][0]!="")
+		while (x<bids.length && bids[x][0]!=0)
 			x++;
 		return x;
 	}
@@ -268,7 +298,7 @@ class SpadesData {
 		return this.#bids[row];
 	}
 
-	mnz(num) {
+	mnz(num) { //make nills (blind or labotamy) zero
 		if (num<0)
 			return 0;
 		else
@@ -283,7 +313,7 @@ class SpadesData {
 	
 	saveTricks(tricks, row) {
 		this.#tricks[row] = tricks;
-		this.updateScores(row);	
+		this.computeRoundScores(row);	
 	}
 	
 	getTricks(row) {
@@ -298,21 +328,14 @@ class SpadesData {
 		return this.#scores[row];
 	}
 	
-	getTotals() { //returns [total_1 ,total_2]
-		let totals=[0,0];
-		let bags=[0,0];
-		for(let team=0;team<2;team++) {		
-			for(let x=0;x<SpadesData.ROWS;x++) {
-				totals[team]+=this.#scores[x][team];
-				bags[team]+=this.#bags[x][team];
-			}
-			totals[team]-=Math.floor(bags[team]/10)*100;
-		}
-		return totals;
+	//get game totals
+	getTotals(row) { //returns [total_1 ,total_2]
+		return [this.#totalsToDate[row][0], this.#totalsToDate[row][1]];
 	}
 	
-	updateScores(row) {
-		//update the scores (and bags) for one round
+	//compute the round scores, bags, and total-to-date for one round
+	//Note: bids and tricks must already be filled in.
+	computeRoundScores(row) {
 		let bids=this.#bids[row];
 		let tricks=this.#tricks[row];
 		
@@ -321,6 +344,7 @@ class SpadesData {
 		let teamScores=[0,0];
 		let teamBags=[0,0];
 		
+		//compute raw team scores based on bids and tricks taken
 		for(let x=0;x<2;x++) {
 			if (teamTricks[x]<teamBids[x]) {
 				teamScores[x]=teamBids[x]*(-10);
@@ -331,7 +355,7 @@ class SpadesData {
 			}
 		}
 		
-		//add/subtract successful/unsuccessful nils
+		//add/subtract 100/200/300 based on successful/unsuccessful nils
 		let nilBids=[bids[0]==0, bids[1]==0, bids[2]==0, bids[3]==0]; //bool array denoting if each player went nill
 		let blindNilBids=[bids[0]==-1, bids[1]==-1, bids[2]==-1, bids[3]==-1]; 	//bool array denoting blind nills
 		let labNilBids=[bids[0]==-2, bids[1]==-2, bids[2]==-2, bids[3]==-2]; 	//bool array denoting lab nills
@@ -350,10 +374,33 @@ class SpadesData {
 			}
 		}		
 		
-		//update object
+		//save round score and bag count in object
 		this.#scores[row][0]=teamScores[0];
 		this.#scores[row][1]=teamScores[1];
 		this.#bags[row][0]=teamBags[0];
 		this.#bags[row][1]=teamBags[1];
+		
+		//compute total-to-date
+		for(let team=0;team<=1;team++) {
+			if (row==0) 
+				this.#totalsToDate[0][team]=teamScores[team];
+			else 
+				this.#totalsToDate[row][team]=this.#totalsToDate[row-1][team]+teamScores[team]-this.bagAdjustment(row,team);
+		}
+	}
+	
+	bagAdjustment(row,team) {
+		if (row<=0)
+			return 0;
+		
+		let prevBags=0;
+		for (let r=0;r<row;r++)
+			prevBags+=this.#bags[r][team];
+		let currBags=prevBags+this.#bags[row][team];
+		
+		if (Math.floor(prevBags/10) == Math.floor(currBags/10) )
+			return 0;
+		else
+			return 100;
 	}
 }
