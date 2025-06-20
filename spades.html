@@ -9,8 +9,8 @@
 </head>
 
 <body>
-
-  <h1>Spades Scoresheet</h1>
+  <button style="float: right;" id="clearSheetBtn">Clear</button>
+  <h1>Spades Scoresheet</h1> 
 
   <!-- Scoresheet -->
   <table id="scoreSheet">
@@ -63,7 +63,13 @@
     </div>
     <button id="namesSaveBtn">Save</button>
   </div>
+
+  <!-- Player Name Entry Popup -->
+  <div id="confirmClearPopup" class="popup">
+	<p>This will erase all data.<br>Are you sure you want <br>to continue?</p>
+    <button id="clearYesBtn">Yes</button>
+    <button id="clearNoBtn">No</button>
+  </div>
  
 </body>
 </html>
-
