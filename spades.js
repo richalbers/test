@@ -5,13 +5,13 @@ $(document).ready(function () {
 	const LAB_NILL='🤪';
 	const bidAmts=[1,2,3,4,5,6,7,8,9,0,-1,-2]; //order must match values
 	const bidDisplays=['1','2','3','4','5','6','7','8','9','0',BLIND_NILL,LAB_NILL];
-	
-	let scoreData=new SpadesData(MAX_ROUNDS);
-	
+
 	const PROCESS_BIDS=0;
 	const PROCESS_TRICKS=1;
-	let action="";
+	let processingBidsOrTricks="";
 
+	let scoreData=new SpadesData(MAX_ROUNDS);
+	
 	//create scoresheet
 	let cellType=["bidCell","trickCell","totalCell","bidCell","trickCell","totalCell"];
 	for (let r = 0; r < MAX_ROUNDS; r++) {
@@ -25,10 +25,11 @@ $(document).ready(function () {
 	scoreData.loadFromCookie();
 	loadScoreSheetData();
 	
-    let $selectedCell = null;
+    let $selectedCell = null;	//currently selected cell on scoresheet (bid or points)
+	let $selectedBTButton=null; //currently selected button on Bid/Trick entry dialog box
 
 	//-------------------------------------------------------------------
-	//clear out all data 
+	//clear out all data (except names) 
 	$('#clearSheetBtn').on('click', function() {
         $('#confirmClearPopup').css({
             top: 100,
@@ -107,18 +108,21 @@ $(document).ready(function () {
 				return;
 			
 			$(`.bidCell.row${row}`).addClass("selected");
-			action=PROCESS_BIDS;
+			processingBidsOrTricks=PROCESS_BIDS;
 			
 			//put names and possible bids in popup
 			let bids=scoreData.getBids(row);
+			let bidCount=scoreData.bidCount(row);
+			$('#btTitle').html(`Bids`);
 			for(let x=0; x<4; x++) {
-				$(`#btText${x}`).html(names[x]);	//put in name
-				$(`#btDropDown${x}`).empty();
-				for (let num = 0; num < bidAmts.length; num++)
-					$(`#btDropDown${x}`).append(`<option value="${bidAmts[num]}">${bidDisplays[num]}</option>`);
-				$(`#btDropDown${x}`).val( bids[x]);	
+				$(`#btText${x}`).html(names[x]);	//name above button
+				let bidDisp=bidDisplays[ bidAmts.indexOf(bids[x]) ]; //converts special nills to emojis
+				$(`#btButton${x}`).html(bidDisp);
 			}
-			
+			//build bid keypad
+			$('#keypadGrid').html("");
+			for (let num = 0; num < bidAmts.length; num++)
+				$('#keypadGrid').append(`<button>${bidDisplays[num]}</button>`);
 		}
 		//tricks/points box clicked on	
 		else { 
@@ -127,25 +131,34 @@ $(document).ready(function () {
 				return;
 			
 			$(`.trickCell.row${row}`).addClass("selected");
-			action=PROCESS_TRICKS;
+			processingBidsOrTricks=PROCESS_TRICKS;
 			//put bids and possible tricks taken in popup
+			$('#btTitle').html("Tricks");
 			let bids=scoreData.getBids(row);
 			let teamBids=scoreData.getTeamBids(row);
 			let tricks=scoreData.getTricks(row);		 //all 0's if entering for first time, or tricks previously entered
 			let teamTricks=scoreData.getTeamTricks(row); //all 0's if entering for first time, or tricks previously entered
 			for(let x=0; x<4; x++) {
-				//let ndx=bidAmts.indexOf(bids[x]);
+				//show bid next to name
 				let bidDisp=bidDisplays[ bidAmts.indexOf(bids[x]) ];
-				$(`#btText${x}`).html(`${names[x]} (${bidDisp})`);  
-				$(`#btDropDown${x}`).empty();
-				for (let num = 0; num <= 9; num++) 
-					$(`#btDropDown${x}`).append(`<option value="${num}">${num}</option>`);
-				//set default entry to bid or existing trick values (if they exist)
-				if ((teamTricks[0]+teamTricks[1])==0) //first time
-					$(`#btDropDown${x}`).val(bidDisp);
-				else
-					$(`#btDropDown${x}`).val(tricks[x]);
+				$(`#btText${x}`).html(`${names[x]} (${bidDisp})`);
+				//if we're editing existing tricks, show those values
+				if ((teamTricks[0]+teamTricks[1])>0) 
+					$(`#btButton${x}`).html(tricks[x]);
+				//otherwise, show the bid amount
+				else {
+					let defaultTricks=0;
+					if (bids[x]>=0) //not blind or labotamy nill
+						defaultTricks=bids[x];
+					$(`#btButton${x}`).html(defaultTricks);						
+				}
+
 			}
+			//build trick keypad
+			$('#keypadGrid').html("");
+			for (let num = 1; num <= 11; num++)
+				$('#keypadGrid').append(`<button>${num}</button>`);			
+			$('#keypadGrid').append("<button>0</button>");	
 		}		
 
 		//show popup box
@@ -163,6 +176,30 @@ $(document).ready(function () {
 		});
     });
 
+	//Bid/Trick Entry Dialog box: one of the bids/tricks buttons was clicked on
+	$('.btGrid button').on('click', function () {
+		$selectedBTButton = $(this);
+		$selectedBTButton.addClass('modifying');
+		const offset = $selectedBTButton.offset();		
+		$('#keypadPopup').css({
+			top: offset.top-75,
+			left: offset.left+($selectedCell.outerWidth())+10,
+			display: 'block',
+			visibility: 'visible'
+		});		
+	});
+	
+	//keypad button clicked on
+	$('#keypadGrid').on('click', 'button', function () {
+		let keyPadValue=$(this).html();
+		
+		$selectedBTButton.html(keyPadValue);
+		$selectedBTButton.removeClass('modifying');	   
+		$selectedBTButton=null;
+		
+		$('#keypadPopup').hide();	   
+	});
+	
 	// -------------------------------------------------------
 	//Closing Bids/Tricks dialog box
     $('#btSaveBtn').on('click', function () {
@@ -171,32 +208,34 @@ $(document).ready(function () {
 		
         const row = $selectedCell.data('row');
 		
-		if (action==PROCESS_BIDS) {
+		if (processingBidsOrTricks==PROCESS_BIDS) {
 			//get bids & validate 4 have been entered.
 			let bids=[];
 			for(let x=0;x<4;x++)
-				bids[x] = parseInt($(`#btDropDown${x}`).val());
-			if (!bids[0] && !bids[1] && !bids[2] && !bids[3]) {
-				$('#btMsg').html("Not all 4 can be nil!");
+				bids[x]=bidAmts[ bidDisplays.indexOf( $(`#btButton${x}`).text()) ];
+			if ((bids[0]<=0) && (bids[1]<=0) && (bids[2]<=0) && (bids[3]<=0)) {
+				$('#btMsg').html("4 nills not allowed!");
 				return;
 			}
 			scoreData.saveBids(bids,row);
 		} 
-		else if (action==PROCESS_TRICKS) {
+		else if (processingBidsOrTricks==PROCESS_TRICKS) {
 			let tricks=[];
-			//get tricks and verify they add up to 13
+			//get tricks and verify they add up to 13 //TODO DEAL WITH BLIND NILL
 			for(let x=0;x<4;x++) 
-				tricks[x] = parseInt($(`#btDropDown${x}`).val());
+				tricks[x] = parseInt($(`#btButton${x}`).text());
 			if ((tricks[0]+tricks[1]+tricks[2]+tricks[3]) != 13) {
-				$('#btMsg').html("Trick total must be 13!");
+				$('#btMsg').html("Total must be 13!");
 				return;
 			}
 			scoreData.saveTricks(tricks,row);
 		}
 		
-		updateSheet(row);		
+		updateSheet(row);
+		
 		//close the popup
         $('#bidsTricksPopup').hide();
+        $('#keypadPopup').hide(); //just in case
         $selectedCell = null;
 		$(".selected").removeClass("selected");
     });
@@ -205,6 +244,7 @@ $(document).ready(function () {
 	//Cancelling Bids/Tricks dialog box	
    $('#btCancelBtn').on('click', function () {
         $('#bidsTricksPopup').hide();
+        $('#keypadPopup').hide(); //just in case
         $selectedCell = null;
 		$(".selected").removeClass("selected");
     });
@@ -220,7 +260,7 @@ $(document).ready(function () {
 	*/
 	//==================================================================================
 	// UI helper functions
-
+	
 	//----------------------------------------------------------
 	//load all cells with data from object
 	function loadScoreSheetData() {
@@ -337,7 +377,8 @@ class SpadesData {
 			this.#scores[x]=[0,0];
 			this.#bags[x]=[0,0];	
 			this.#totalsToDate[x]=[0,0];
-		}	
+		}
+		this.saveToCookie();
 	}
 	
 	saveNames(names) {
