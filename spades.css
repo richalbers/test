@@ -1,6 +1,7 @@
 	* {
 		font-size: 50px;
 		font-family: Arial, sans-serif;
+		zborder:1px solid red;
 	}
 
 	h1 {
@@ -40,8 +41,21 @@
       background-color: #f0f0f0;
     }
 
+    button {
+      margin: 0px;
+      padding: 15px 15px;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+	
+    button:hover {
+      background-color: #0056b3;
+    }
+	
 	.selected {
-		border-width: 2px;
+		border-width: 4px;
 		zborder-bottom-width: 2px;
 		border-color: red;
 	}
@@ -51,7 +65,7 @@
       display: none;
       position: absolute;
       background: #fff;
-      border: 1px solid #ccc;
+      border: 5px solid #ccc;
       padding: 15px;
       z-index: 1000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -59,29 +73,47 @@
 	  font-family: Arial, sans-serif;
     }
 
-    /* Dropdown popup */
-    #popup {
-      zwidth: 160px;
-    }
+	.popup button {
+		width: 100%;
+		margin-bottom: 15px;
+	}
+ 	
+	/* bid/trick popup */
+	#btTitle { 
+		zmargins: auto;
+		text-align: center;
+	}
 	
     .btGrid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 50px;
+      gap: 0px 30px;
       margin-bottom: 20px;
     }
 	
-    select {
-      padding: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      width: 170px;
-    }
+	.btGrid div {
+		margin: 0px;
+	}
 
-    /* Text input popup */
+	.modifying {
+		background-color: DarkBlue;
+	}
+	
+	/* keypad popup */
+	#keypadGrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+	
+	#keypadGrid button {
+		width: 120px;
+	}
+	
+    /* Names input popup */
     #namesPopup {
       width: 95%;
-	  margins: auto;
+	  margin: auto;
     }
 	
     .namesGrid {
@@ -93,26 +125,3 @@
 	.namesGrid input {
 		width: 9em;
 	}
-
-    button {
-      zmargin-top: 10px;
-      padding: 7px 14px;
-      zfont-size: 16px;
-      border: none;
-      background-color: #007BFF;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      zwidth: 100%;
-    }
-	
-	.popup button {
-		width: 100%;
-		margin-top: 15px;
-	}
-	
-    button:hover {
-      background-color: #0056b3;
-    }
- 
