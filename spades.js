@@ -166,7 +166,7 @@ $(document).ready(function () {
 
 		$('#bidsTricksPopup').css({
 			top: offset.top + ($selectedCell.outerHeight()),
-			left: 75,
+			left: 10,
 			display: 'block',
 			visibility: 'visible'
 		});
