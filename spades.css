@@ -1,12 +1,12 @@
-	* {
+* {
 		font-size: 50px;
 		font-family: Arial, sans-serif;
 		zborder:1px solid red;
 	}
 
 	h1 {
-		font-size: 55px;
 		text-align: center;
+		zfont-size: 55px;
 	}
 	
 	h3 {
@@ -51,11 +51,15 @@
       cursor: pointer;
     }
 	
+	#namesPopup button {
+		margin-top: 10px;
+	}
+	
     button:hover {
       background-color: #0056b3;
     }
 	
-	.selected {
+	.selectedCell {
 		border-width: 4px;
 		zborder-bottom-width: 2px;
 		border-color: red;
@@ -71,7 +75,7 @@
       z-index: 1000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       border-radius: 6px;
-	  font-family: Arial, sans-serif;
+	  zfont-family: Arial, sans-serif;
     }
 
 	.popup button {
@@ -96,7 +100,7 @@
 		margin: 0px;
 	}
 
-	.modifying {
+	.selectedBT {
 		background-color: DarkBlue;
 	}
 	
