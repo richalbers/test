@@ -23,7 +23,8 @@ $(document).ready(function () {
 	}
 	
 	scoreData.loadFromCookie();
-	loadScoreSheetData();
+	refreshNames();
+	refreshScoreSheet();
 	
     let $selectedCell = null;	//currently selected cell on scoresheet (bid or points)
 	let $selectedBTButton=null; //currently selected button on Bid/Trick entry dialog box
@@ -42,7 +43,8 @@ $(document).ready(function () {
 	$('#clearYesBtn').on('click', function () {
         $('#confirmClearPopup').hide();
 		scoreData.clearData();
-		loadScoreSheetData();
+		scoreData.saveToCookie();
+		refreshScoreSheet();
     });	
 	
 	$('#clearNoBtn').on('click', function () {
@@ -69,17 +71,11 @@ $(document).ready(function () {
 	// process/close names popup
     $('#namesSaveBtn').on('click', function () {
 		let names=["","","",""];
-		names[0]=$('#nameTxtbox0').val();
-		names[1]=$('#nameTxtbox1').val();
-		names[2]=$('#nameTxtbox2').val();
-		names[3]=$('#nameTxtbox3').val();
-		
-		//if (names[0] != "" && names[3] != "")
-			$('#team1').html(names[0] + " / " + names[3]);
-		//if (name[1] != "" && name[2] != "")
-			$('#team2').html(names[1] + " / " + names[2]);	
-		
+		for (let x=0; x<4; x++) 
+			names[x]=$(`#nameTxtbox${x}`).val().trim();
 		scoreData.saveNames(names);
+		refreshNames();
+		
         $('#namesPopup').hide();
     });
 	
@@ -95,7 +91,7 @@ $(document).ready(function () {
 		if ($(this).attr("class").indexOf('trickCell')>=0)
 			cellType="trickCell";
 		
-		$(".selected").removeClass("selected");
+		$(".selectedCell").removeClass("selectedCell");
 		$('#btMsg').html("");
 		
         if ((cellType=="bidCell")) {
@@ -107,7 +103,7 @@ $(document).ready(function () {
 			else
 				return;
 			
-			$(`.bidCell.row${row}`).addClass("selected");
+			$(`.bidCell.row${row}`).addClass("selectedCell");
 			processingBidsOrTricks=PROCESS_BIDS;
 			
 			//put names and possible bids in popup
@@ -130,7 +126,7 @@ $(document).ready(function () {
 			if (row!=scoreData.lastRowWithData())
 				return;
 			
-			$(`.trickCell.row${row}`).addClass("selected");
+			$(`.trickCell.row${row}`).addClass("selectedCell");
 			processingBidsOrTricks=PROCESS_TRICKS;
 			//put bids and possible tricks taken in popup
 			$('#btTitle').html("Tricks");
@@ -179,7 +175,7 @@ $(document).ready(function () {
 	//Bid/Trick Entry Dialog box: one of the bids/tricks buttons was clicked on
 	$('.btGrid button').on('click', function () {
 		$selectedBTButton = $(this);
-		$selectedBTButton.addClass('modifying');
+		$selectedBTButton.addClass('selectedBT');
 		const offset = $selectedBTButton.offset();		
 		$('#keypadPopup').css({
 			top: offset.top-75,
@@ -194,7 +190,7 @@ $(document).ready(function () {
 		let keyPadValue=$(this).html();
 		
 		$selectedBTButton.html(keyPadValue);
-		$selectedBTButton.removeClass('modifying');	   
+		$selectedBTButton.removeClass('selectedBT');	   
 		$selectedBTButton=null;
 		
 		$('#keypadPopup').hide();	   
@@ -235,18 +231,22 @@ $(document).ready(function () {
 		
 		//close the popup
         $('#bidsTricksPopup').hide();
-        $('#keypadPopup').hide(); //just in case
         $selectedCell = null;
-		$(".selected").removeClass("selected");
+		$(".selected").removeClass("selectedCell");
+
+        $('#keypadPopup').hide(); //just in case
+		$(".selectedBT").removeClass('selectedBT');
     });
 	
 	// -------------------------------------------------------
 	//Cancelling Bids/Tricks dialog box	
    $('#btCancelBtn').on('click', function () {
-        $('#bidsTricksPopup').hide();
-        $('#keypadPopup').hide(); //just in case
+       $('#bidsTricksPopup').hide();
         $selectedCell = null;
-		$(".selected").removeClass("selected");
+		$(".selected").removeClass("selectedCell");
+
+        $('#keypadPopup').hide(); //just in case
+		$(".selectedBT").removeClass('selectedBT');
     });
 
    // Click outside to close any popup
@@ -262,8 +262,20 @@ $(document).ready(function () {
 	// UI helper functions
 	
 	//----------------------------------------------------------
-	//load all cells with data from object
-	function loadScoreSheetData() {
+	//reresh the names shown with names from ScoreSheet object
+	function refreshNames() {
+		let dspNames=scoreData.getNames();
+
+		for (let x=0; x<4; x++) 
+			if (dspNames[x]=="")
+				dspNames[x]="?";		
+		$('#team1').html(dspNames[0] + " / " + dspNames[3]);
+		$('#team2').html(dspNames[1] + " / " + dspNames[2]);				
+	}
+	
+	//----------------------------------------------------------
+	//load all cells with data from ScoreSheet object
+	function refreshScoreSheet() {
 		for(let row=0;row<MAX_ROUNDS; row++) {
 			updateSheet(row);
 		}
@@ -378,44 +390,16 @@ class SpadesData {
 			this.#bags[x]=[0,0];	
 			this.#totalsToDate[x]=[0,0];
 		}
-		this.saveToCookie();
+		//don't write to cookie!  Or there be problems!
 	}
 	
 	saveNames(names) {
 		this.#names=names;
+		this.saveToCookie();
 	}
 	
 	getNames() {
 		return this.#names;
-	}
-	
-	saveToCookie() {  //TODO - FIX write to cookie!!!!
-		let namesData=JSON.stringify(this.#names);
-		let bidData=JSON.stringify(this.#bids);
-		let trickData=JSON.stringify(this.#tricks);
-		let cookieData=namesData + "|" + bidData + "|" + trickData;
-		
-		setCookie(SpadesData.COOKIE_NAME, cookieData, { expires: 1 });
-	}
-	
-	loadFromCookie() {  
-		this.clearData();
-		
-		let cookieData=getCookie(SpadesData.COOKIE_NAME);
-		if (cookieData==null)
-			return;
-		
-		let nameData=cookieData.split('|')[0];
-		let bidData=cookieData.split('|')[1]; 
-		let trickData=cookieData.split('|')[2];
-		
-		this.#names=JSON.parse(nameData);
-		this.#bids=JSON.parse(bidData);
-		this.#tricks=JSON.parse(trickData);	
-		
-		for(let row=0;row<=this.lastRowWithData();row++) {
-			this.computeRoundScores(row);
-		}
 	}
 
 	firstEmptyRow() {
@@ -556,6 +540,35 @@ class SpadesData {
 			return 0;
 		else
 			return 100;
+	}
+
+	saveToCookie() {  
+		let namesData=JSON.stringify(this.#names);
+		let bidData=JSON.stringify(this.#bids);
+		let trickData=JSON.stringify(this.#tricks);
+		let cookieData=namesData + "|" + bidData + "|" + trickData;
+		
+		setCookie(SpadesData.COOKIE_NAME, cookieData, 1);
+	}
+	
+	loadFromCookie() {  
+		this.clearData();
+		
+		let cookieData=getCookie(SpadesData.COOKIE_NAME);
+		if (cookieData==null)
+			return;
+		
+		let nameData=cookieData.split('|')[0];
+		let bidData=cookieData.split('|')[1]; 
+		let trickData=cookieData.split('|')[2];
+		
+		this.#names=JSON.parse(nameData);
+		this.#bids=JSON.parse(bidData);
+		this.#tricks=JSON.parse(trickData);	
+		
+		for(let row=0;row<=this.lastRowWithData();row++) {
+			this.computeRoundScores(row);
+		}
 	}
 }
 
