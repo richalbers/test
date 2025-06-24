@@ -108,13 +108,13 @@ $(document).ready(function () {
 			
 			//put names and possible bids in popup
 			let bids=scoreData.getBids(row);
-			let bidCount=scoreData.bidCount(row);
-			$('#btTitle').html(`Bids`);
 			for(let x=0; x<4; x++) {
 				$(`#btText${x}`).html(names[x]);	//name above button
 				let bidDisp=bidDisplays[ bidAmts.indexOf(bids[x]) ]; //converts special nills to emojis
 				$(`#btButton${x}`).html(bidDisp);
 			}
+			let bidTotal=countEnteredBids();
+			$('#btTitle').html(`Bids: ${bidTotal}`);
 			//build bid keypad
 			$('#keypadGrid').html("");
 			for (let num = 0; num < bidAmts.length; num++)
@@ -129,7 +129,6 @@ $(document).ready(function () {
 			$(`.trickCell.row${row}`).addClass("selectedCell");
 			processingBidsOrTricks=PROCESS_TRICKS;
 			//put bids and possible tricks taken in popup
-			$('#btTitle').html("Tricks");
 			let bids=scoreData.getBids(row);
 			let teamBids=scoreData.getTeamBids(row);
 			let tricks=scoreData.getTricks(row);		 //all 0's if entering for first time, or tricks previously entered
@@ -148,8 +147,11 @@ $(document).ready(function () {
 						defaultTricks=bids[x];
 					$(`#btButton${x}`).html(defaultTricks);						
 				}
-
 			}
+			
+			let trickTotal=countEnteredTricks();
+			$('#btTitle').html(`Tricks: ${trickTotal}`);
+			
 			//build trick keypad
 			$('#keypadGrid').html("");
 			for (let num = 1; num <= 11; num++)
@@ -166,7 +168,7 @@ $(document).ready(function () {
 
 		$('#bidsTricksPopup').css({
 			top: offset.top + ($selectedCell.outerHeight()),
-			left: 10,
+			left: 75,
 			display: 'block',
 			visibility: 'visible'
 		});
@@ -192,8 +194,17 @@ $(document).ready(function () {
 		$selectedBTButton.html(keyPadValue);
 		$selectedBTButton.removeClass('selectedBT');	   
 		$selectedBTButton=null;
-		
-		$('#keypadPopup').hide();	   
+
+		$('#keypadPopup').hide();
+
+		if (processingBidsOrTricks==PROCESS_BIDS) {
+			let bidTotal=countEnteredBids();
+			$('#btTitle').html(`Bids: ${bidTotal}`);		
+		}		
+		if (processingBidsOrTricks==PROCESS_TRICKS) {
+			let trickTotal=countEnteredTricks();
+			$('#btTitle').html(`Tricks: ${trickTotal}`);		
+		}		
 	});
 	
 	// -------------------------------------------------------
@@ -206,7 +217,7 @@ $(document).ready(function () {
 		
 		if (processingBidsOrTricks==PROCESS_BIDS) {
 			//get bids & validate 4 have been entered.
-			let bids=[];
+			let bids=[0,0,0,0];
 			for(let x=0;x<4;x++)
 				bids[x]=bidAmts[ bidDisplays.indexOf( $(`#btButton${x}`).text()) ];
 			if ((bids[0]<=0) && (bids[1]<=0) && (bids[2]<=0) && (bids[3]<=0)) {
@@ -216,14 +227,14 @@ $(document).ready(function () {
 			scoreData.saveBids(bids,row);
 		} 
 		else if (processingBidsOrTricks==PROCESS_TRICKS) {
-			let tricks=[];
-			//get tricks and verify they add up to 13 //TODO DEAL WITH BLIND NILL
-			for(let x=0;x<4;x++) 
-				tricks[x] = parseInt($(`#btButton${x}`).text());
-			if ((tricks[0]+tricks[1]+tricks[2]+tricks[3]) != 13) {
+			let trickCount=countEnteredTricks();
+			if (trickCount != 13) {
 				$('#btMsg').html("Total must be 13!");
 				return;
 			}
+			let tricks=[0,0,0,0];
+			for(let x=0;x<4;x++) 
+				tricks[x]+=parseInt($(`#btButton${x}`).text());
 			scoreData.saveTricks(tricks,row);
 		}
 		
@@ -260,6 +271,27 @@ $(document).ready(function () {
 	*/
 	//==================================================================================
 	// UI helper functions
+	
+	//----------------------------------------------------------
+	//return the current number of tricks accounted for on dialog box
+	function countEnteredBids() {
+		let bidTotal=0;
+		for(let x=0;x<4;x++) {
+			let bid=bidAmts[ bidDisplays.indexOf( $(`#btButton${x}`).text()) ];
+			if (bid >=0)
+				bidTotal+=bid;
+		}
+		return bidTotal;
+	}
+	
+	//----------------------------------------------------------
+	//return the current number of tricks accounted for on dialog box
+	function countEnteredTricks() {
+		let trickTotal=0;
+		for(let x=0;x<4;x++) 
+			trickTotal+=parseInt($(`#btButton${x}`).text());
+		return trickTotal;
+	}
 	
 	//----------------------------------------------------------
 	//reresh the names shown with names from ScoreSheet object
