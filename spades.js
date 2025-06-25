@@ -97,11 +97,15 @@ $(document).ready(function () {
         if ((cellType=="bidCell")) {
 			//only allow last row modificication or new row entry
 			if (row==scoreData.lastRowWithData() && scoreData.trickCount(row)==0)
-				; //bids=scoreData.getBids(row);
-			else if (row==scoreData.firstEmptyRow())
-				;
-			else
+				; //show dialog box
+			else if (row==scoreData.firstEmptyRow() && row==0)
+				; // show dialog box
+			else if (row==scoreData.firstEmptyRow() && scoreData.trickCount(row-1)>0)
+				; //show dialog box
+			else {
+				closeAnyOpenDialogBox();
 				return;
+			}
 			
 			$(`.bidCell.row${row}`).addClass("selectedCell");
 			processingBidsOrTricks=PROCESS_BIDS;
@@ -123,8 +127,10 @@ $(document).ready(function () {
 		//tricks/points box clicked on	
 		else { 
 			// only last row with data is allowed to have tricks entered.
-			if (row!=scoreData.lastRowWithData())
+			if (row!=scoreData.lastRowWithData()) {
+				closeAnyOpenDialogBox();
 				return;
+			}
 			
 			$(`.trickCell.row${row}`).addClass("selectedCell");
 			processingBidsOrTricks=PROCESS_TRICKS;
@@ -176,6 +182,7 @@ $(document).ready(function () {
 
 	//Bid/Trick Entry Dialog box: one of the bids/tricks buttons was clicked on
 	$('.btGrid button').on('click', function () {
+		$('.selectedBT').removeClass('selectedBT');	   
 		$selectedBTButton = $(this);
 		$selectedBTButton.addClass('selectedBT');
 		const offset = $selectedBTButton.offset();		
@@ -216,7 +223,7 @@ $(document).ready(function () {
         const row = $selectedCell.data('row');
 		
 		if (processingBidsOrTricks==PROCESS_BIDS) {
-			//get bids & validate 4 have been entered.
+			//get bids & validate at least one is not nill.
 			let bids=[0,0,0,0];
 			for(let x=0;x<4;x++)
 				bids[x]=bidAmts[ bidDisplays.indexOf( $(`#btButton${x}`).text()) ];
@@ -239,38 +246,28 @@ $(document).ready(function () {
 		}
 		
 		updateSheet(row);
-		
-		//close the popup
-        $('#bidsTricksPopup').hide();
-        $selectedCell = null;
-		$(".selected").removeClass("selectedCell");
-
-        $('#keypadPopup').hide(); //just in case
-		$(".selectedBT").removeClass('selectedBT');
+		closeAnyOpenDialogBox()
     });
 	
 	// -------------------------------------------------------
 	//Cancelling Bids/Tricks dialog box	
    $('#btCancelBtn').on('click', function () {
-       $('#bidsTricksPopup').hide();
-        $selectedCell = null;
-		$(".selected").removeClass("selectedCell");
-
-        $('#keypadPopup').hide(); //just in case
-		$(".selectedBT").removeClass('selectedBT');
+		closeAnyOpenDialogBox();
     });
 
-   // Click outside to close any popup
-	/*
-    $(document).on('mousedown', function (e) {
-        if (!$(e.target).closest('.popup, td, th').length) {
-            $('#bidsPopup, #namesPopup').hide();
-            $selectedCell = null;
-        }
-    });
-	*/
+
 	//==================================================================================
 	// UI helper functions
+
+ 	//----------------------------------------------------------
+	//close any open dialog box   
+	function closeAnyOpenDialogBox() {
+		$('#bidsTricksPopup, #keypadPopup, #namesPopup').hide();
+		$selectedCell = null;
+		$selectedBTButton=null;
+		$(".selectedCell").removeClass("selectedCell");
+		$(".selectedBT").removeClass('selectedBT'); 
+	};	
 	
 	//----------------------------------------------------------
 	//return the current number of tricks accounted for on dialog box
@@ -489,6 +486,7 @@ class SpadesData {
 	}	
 
 	trickCount(row) {
+		if (row<0) return 0;
 		let tricks=this.#tricks[row];
 		return tricks[0]+tricks[1]+tricks[2]+tricks[3];	
 	}
