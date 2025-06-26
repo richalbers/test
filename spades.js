@@ -93,6 +93,8 @@ $(document).ready(function () {
 		
 		$(".selectedCell").removeClass("selectedCell");
 		$('#btMsg').html("");
+	
+		$('#bidsTricksPopup').removeClass('editing');
 		
         if ((cellType=="bidCell")) {
 			//only allow last row modificication or new row entry
@@ -119,6 +121,10 @@ $(document).ready(function () {
 			}
 			let bidTotal=countEnteredBids();
 			$('#btTitle').html(`Bids: ${bidTotal}`);
+			
+			if (bidTotal>0)
+				$('#bidsTricksPopup').addClass('editing');
+			
 			//build bid keypad
 			$('#keypadGrid').html("");
 			for (let num = 0; num < bidAmts.length; num++)
@@ -134,6 +140,7 @@ $(document).ready(function () {
 			
 			$(`.trickCell.row${row}`).addClass("selectedCell");
 			processingBidsOrTricks=PROCESS_TRICKS;
+			
 			//put bids and possible tricks taken in popup
 			let bids=scoreData.getBids(row);
 			let teamBids=scoreData.getTeamBids(row);
@@ -224,13 +231,13 @@ $(document).ready(function () {
 		
 		if (processingBidsOrTricks==PROCESS_BIDS) {
 			//get bids & validate at least one is not nill.
-			let bids=[0,0,0,0];
-			for(let x=0;x<4;x++)
-				bids[x]=bidAmts[ bidDisplays.indexOf( $(`#btButton${x}`).text()) ];
-			if ((bids[0]<=0) && (bids[1]<=0) && (bids[2]<=0) && (bids[3]<=0)) {
+			if (countEnteredBids()==0) {
 				$('#btMsg').html("4 nills not allowed!");
 				return;
 			}
+			let bids=[0,0,0,0];
+			for(let x=0;x<4;x++)
+				bids[x]=bidAmts[ bidDisplays.indexOf( $(`#btButton${x}`).text()) ];
 			scoreData.saveBids(bids,row);
 		} 
 		else if (processingBidsOrTricks==PROCESS_TRICKS) {
@@ -317,7 +324,7 @@ $(document).ready(function () {
 		for (let col = 0; col < 6; col++) 
 			$(`#scoreSheet td[data-row="${row}"][data-col="${col}"]`).text("");
 		
-		if (scoreData.bidCount(row)==0)
+		if (scoreData.getBidTotal(row)==0) //no data to show
 			return;
 		
 		//show the team bids in the score sheet
@@ -434,7 +441,7 @@ class SpadesData {
 	firstEmptyRow() {
 		let x=0;
 		let bids=this.#bids;
-		while (x<bids.length && (this.bidCount(x)!=0))
+		while (x<bids.length && (this.getBidTotal(x)!=0))
 			x++;
 		return x;
 	}
@@ -452,7 +459,7 @@ class SpadesData {
 		return this.#bids[row];
 	}
 	
-	bidCount(row) {
+	getBidTotal(row) {
 		let bids=this.#bids[row];
 		return this.mnz(bids[0])+this.mnz(bids[1])+this.mnz(bids[2])+this.mnz(bids[3]);
 	}
