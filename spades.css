@@ -15,7 +15,7 @@
 	}
 	
     table {
-      clear: both;
+	  clear: both;
       border-collapse: collapse;
       margin: 10px;
     }
@@ -105,6 +105,10 @@
 		background-color: DarkBlue;
 	}
 	
+	.editing {
+		background-color: LightCoral;
+	}
+	
 	/* keypad popup */
 	#keypadGrid {
       display: grid;
@@ -114,7 +118,6 @@
 	
 	#keypadGrid button {
 		width: 120px;
-		font-size: 55px;
 	}
 	
     /* Names input popup */
