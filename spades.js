@@ -53,6 +53,17 @@ $(document).ready(function () {
     });	
 	
 	//-------------------------------------------------------------------
+    // toggle title 
+    $('#sheetTitle').on('click', function () {
+		let currentTitle=$(this).html();
+		if (currentTitle=="Spades Scoresheet")
+			$(this).html("Ol' Trusty");
+		else
+			$(this).html("Spades Scoresheet");			
+		//alert(currentTitle);
+    });	
+	
+	//-------------------------------------------------------------------
     // show names popup 
     $('#scoreSheet th').on('click', function () {
 		let names=scoreData.getNames();
@@ -311,9 +322,9 @@ $(document).ready(function () {
 	function refreshNames() {
 		let dspNames=scoreData.getNames();
 
-		for (let x=0; x<4; x++) 
-			if (dspNames[x]=="")
-				dspNames[x]="?";		
+		//for (let x=0; x<4; x++) 
+		//	if (dspNames[x]=="")
+		//		dspNames[x]="?";		
 		$('#team1').html(dspNames[0] + " / " + dspNames[3]);
 		$('#team2').html(dspNames[1] + " / " + dspNames[2]);				
 	}
@@ -640,4 +651,5 @@ function getCookie(name) {
 	}
 	return null;
 }	
+
 
