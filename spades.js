@@ -21,6 +21,7 @@ $(document).ready(function () {
 		}
 		$('#scoreSheet tbody').append(tr);
 	}
+	$('.row0.bidCell').addClass('editable');
 	
 	scoreData.loadFromCookie();
 	refreshNames();
@@ -98,7 +99,7 @@ $(document).ready(function () {
 		
         if ((cellType=="bidCell")) {
 			//only allow last row modificication or new row entry
-			if (row==scoreData.lastRowWithData() && scoreData.trickCount(row)==0)
+			if (row==scoreData.lastRowWithData()) //&& scoreData.trickCount(row)==0)
 				; //show dialog box
 			else if (row==scoreData.firstEmptyRow() && row==0)
 				; // show dialog box
@@ -228,6 +229,7 @@ $(document).ready(function () {
 			return;
 		
         const row = $selectedCell.data('row');
+		let nextCell = $selectedCell.next(); //needed if bids are edited after tricks are entered
 		
 		if (processingBidsOrTricks==PROCESS_BIDS) {
 			//get bids & validate at least one is not nill.
@@ -254,6 +256,13 @@ $(document).ready(function () {
 		
 		updateSheet(row);
 		closeAnyOpenDialogBox()
+		
+		//if we just edited the bids but tricks have already been entered on this row 
+		//(user originally entered incorrect number of bids and just corrected them)
+		//then show the tricks box again so they can be edited (maybe) and totals recaluated (important)
+		if (processingBidsOrTricks==PROCESS_BIDS && scoreData.trickCount(row)>0) { 
+			nextCell.click();
+		}
     });
 	
 	// -------------------------------------------------------
@@ -631,3 +640,4 @@ function getCookie(name) {
 	}
 	return null;
 }	
+
