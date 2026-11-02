@@ -3,8 +3,8 @@ $(document).ready(function () {
 	const MAX_ROUNDS=30;
 	const BLIND_NILL='😎';
 	const LAB_NILL='🤪';
-	const bidAmts=[1,2,3,4,5,6,7,8,9,0,-1,-2]; //order must match values
-	const bidDisplays=['1','2','3','4','5','6','7','8','9','0',BLIND_NILL,LAB_NILL];
+	const bidAmts=[1,2,3,4,5,6,7,8,9,10,11,12,0,-1,-2]; //order must match values
+	const bidDisplays=['1','2','3','4','5','6','7','8','9','10','11','12','0',BLIND_NILL,LAB_NILL];
 
 	const PROCESS_BIDS=0;
 	const PROCESS_TRICKS=1;
